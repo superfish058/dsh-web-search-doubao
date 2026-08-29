@@ -2,9 +2,11 @@
 node_modules/
 
 # build output (lib/*.js at the root IS committed so git installs work
-# without build permissions — see docs in README; lib/types and build
-# metadata are reproducible via `pnpm build`)
+# without build permissions — see docs in README; lib/types, tsc's ESM
+# mirror of the client half, and build metadata are reproducible via
+# `pnpm build` — the shipped client artifact is tsdown's lib/client.js)
 lib/types/
+lib/client/
 *.tsbuildinfo
 
 # private working documents (not part of the public distribution)
