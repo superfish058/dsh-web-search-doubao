@@ -103,7 +103,7 @@ DOUBAO_SEARCH_API_KEY ─────▶│      web-search-doubao       │
 
 需要已安装 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh` CLI 可用）和一个豆包搜索 API 密钥。
 
-1. **获取密钥**：打开[豆包搜索控制台](https://console.volcengine.com/search-infinity/web-search-exp)，登录火山引擎账号，开通服务，然后创建 API Key。该密钥**与 `ARK_API_KEY` 相互独立**——只授权豆包搜索服务。每个账号每月 500 次免费额度；超出后在同一控制台开通按量付费。
+1. **获取密钥**：打开[豆包搜索 API Key 页面](https://console.volcengine.com/search-infinity/api-key)，登录火山引擎账号，开通服务，然后创建 API Key。该密钥**与 `ARK_API_KEY` 相互独立**——只授权豆包搜索服务。每个账号每月 500 次免费额度；超出后在同一控制台开通按量付费。
 
    > 这*不是*火山方舟（Ark）控制台的密钥。方舟聊天侧联网搜索插件是另一个产品、另一套计费。
 
@@ -122,7 +122,7 @@ DOUBAO_SEARCH_API_KEY ─────▶│      web-search-doubao       │
 
 ## 设置界面卡片
 
-安装后，harness 设置侧边栏会新增**网页搜索（豆包搜索）**分区，包含三个字段——API Key（掩码输入，附可点击的**获取 API Key ↗**链接直达[豆包搜索控制台](https://console.volcengine.com/search-infinity/web-search-exp)）、接口地址、服务版本。**保存**会把它们写入 DSH 凭据服务（引用名分别为 `DOUBAO_SEARCH_API_KEY`、`DOUBAO_SEARCH_BASE_URL`、`DOUBAO_SEARCH_EDITION`）；**清空**会移除全部三个。API Key 旁的徽标在存入密钥后变为*已配置*，密钥变化时实时刷新。保存的值在下一次搜索即生效——无需重启。
+安装后，harness 设置侧边栏会新增**网页搜索（豆包搜索）**分区，包含三个字段——API Key（掩码输入，附可点击的**获取 API Key ↗**链接直达[豆包搜索 API Key 页面](https://console.volcengine.com/search-infinity/api-key)）、接口地址、服务版本。**保存**会把它们写入 DSH 凭据服务（引用名分别为 `DOUBAO_SEARCH_API_KEY`、`DOUBAO_SEARCH_BASE_URL`、`DOUBAO_SEARCH_EDITION`）；**清空**会移除全部三个。API Key 旁的徽标在存入密钥后变为*已配置*，密钥变化时实时刷新。保存的值在下一次搜索即生效——无需重启。
 
 卡片底部的存储说明标注了取值的实际去向，无需猜测：卡片保存的值 → `~/.dsh/.credentials.yaml`（凭据服务），**绝不**写入 `settings.yaml`；`settings.yaml` 中的 `web-search-doubao` 分区仅在你以文件方式编辑同一批字段时才会出现。
 

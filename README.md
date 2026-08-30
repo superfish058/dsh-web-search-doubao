@@ -104,7 +104,7 @@ Failures surface as standard `WebError` codes: `WEB_PROVIDER_ERROR` (HTTP/networ
 
 You'll need the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) installed (`dsh` CLI available) and a Doubao Search API key.
 
-1. **Get a key** at the [Doubao Search console](https://console.volcengine.com/search-infinity/web-search-exp): sign in with your Volcengine account, 开通服务 (activate the service), then 创建 API Key. The key is **separate from any `ARK_API_KEY`** — it authorizes only the Doubao Search service. Every account gets 500 free searches per month; beyond that you enable pay-per-use in the same console.
+1. **Get a key** at the [Doubao Search API-key page](https://console.volcengine.com/search-infinity/api-key): sign in with your Volcengine account, 开通服务 (activate the service), then 创建 API Key. The key is **separate from any `ARK_API_KEY`** — it authorizes only the Doubao Search service. Every account gets 500 free searches per month; beyond that you enable pay-per-use in the same console.
 
    > This is *not* the 火山方舟 (Ark) console key. The Ark chat-side web-search plugin is a different product with different billing.
 
@@ -123,7 +123,7 @@ You'll need the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harne
 
 ## Settings GUI card
 
-After install, the harness settings sidebar gains a **Web Search (Doubao)** section with three fields — API key (masked input, with a clickable **Get an API key ↗** link to the [Doubao Search console](https://console.volcengine.com/search-infinity/web-search-exp)), Base URL, and Edition. **Save** writes them to the DSH credentials service (under the `DOUBAO_SEARCH_API_KEY`, `DOUBAO_SEARCH_BASE_URL`, and `DOUBAO_SEARCH_EDITION` references); **Reset** clears all three. The badge next to the API key flips to *configured* once a key is stored and refreshes live when the key changes. Saved values take effect on the next search — no restart.
+After install, the harness settings sidebar gains a **Web Search (Doubao)** section with three fields — API key (masked input, with a clickable **Get an API key ↗** link to the [Doubao Search API-key page](https://console.volcengine.com/search-infinity/api-key)), Base URL, and Edition. **Save** writes them to the DSH credentials service (under the `DOUBAO_SEARCH_API_KEY`, `DOUBAO_SEARCH_BASE_URL`, and `DOUBAO_SEARCH_EDITION` references); **Reset** clears all three. The badge next to the API key flips to *configured* once a key is stored and refreshes live when the key changes. Saved values take effect on the next search — no restart.
 
 A footer in the card maps where things live, so you never have to guess: card values → `~/.dsh/.credentials.yaml` (the credentials service), **never** `settings.yaml`; the `web-search-doubao` section in `settings.yaml` exists only for file-based edits of the same fields.
 

@@ -78,7 +78,7 @@ const card = createSearchProviderCard({
   sectionId: 'doubao-web-search',
   order: 20,
   keyFieldId: 'apiKey',
-  keyConsoleUrl: 'https://console.volcengine.com/search-infinity/web-search-exp',
+  keyConsoleUrl: 'https://console.volcengine.com/search-infinity/api-key',
   fields,
   dictionaries: { en, zh },
 })

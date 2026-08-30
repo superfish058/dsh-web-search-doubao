@@ -135,7 +135,7 @@ describe('web-search-doubao client card registration', () => {
     const c = fakeContext()
     apply(c.ctx)
     const props = itemProps(c.items[0]!)
-    expect(props.keyConsoleUrl).toBe('https://console.volcengine.com/search-infinity/web-search-exp')
+    expect(props.keyConsoleUrl).toBe('https://console.volcengine.com/search-infinity/api-key')
     const dictionaries = c.locales[0]![1] as { en: Record<string, string>, zh: Record<string, string> }
     for (const key of ['getApiKey', 'storageNote', 'keyConfigured', 'keyMissing']) {
       expect(dictionaries.en[key]).toBeTruthy()
