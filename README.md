@@ -108,6 +108,8 @@ You'll need the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harne
 
    > This is *not* the 火山方舟 (Ark) console key. The Ark chat-side web-search plugin is a different product with different billing.
 
+   ![Doubao Search console — 500 free searches per month](docs/img/console.png)
+
    Store the key so it never lands in a config file — paste it into the plugin's **Web Search (Doubao)** settings card in the harness GUI (see [below](#settings-gui-card)), add a `DOUBAO_SEARCH_API_KEY` entry to `$DSH_HOME/.credentials.yaml`, or export it in the launching environment.
 
 2. **Install the plugin:**
@@ -122,6 +124,8 @@ You'll need the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harne
 3. **Search.** Ask your harness something current and watch the `web_search` tool return Doubao results.
 
 ## Settings GUI card
+
+![Web Search (Doubao) settings card — live in the harness Settings GUI](docs/img/settings-card.png)
 
 After install, the harness settings sidebar gains a **Web Search (Doubao)** section with three fields — API key (masked input, with a clickable **Get an API key ↗** link to the [Doubao Search API-key page](https://console.volcengine.com/search-infinity/api-key)), Base URL, and Edition. **Save** writes them to the DSH credentials service (under the `DOUBAO_SEARCH_API_KEY`, `DOUBAO_SEARCH_BASE_URL`, and `DOUBAO_SEARCH_EDITION` references); **Reset** clears all three. The badge next to the API key flips to *configured* once a key is stored and refreshes live when the key changes. Saved values take effect on the next search — no restart.
 

@@ -107,6 +107,8 @@ DOUBAO_SEARCH_API_KEY ─────▶│      web-search-doubao       │
 
    > 这*不是*火山方舟（Ark）控制台的密钥。方舟聊天侧联网搜索插件是另一个产品、另一套计费。
 
+   ![豆包搜索控制台 —— 每月 500 次免费额度](docs/img/console.png)
+
    请妥善保存密钥，避免写入配置文件——直接粘贴到 harness 设置界面中的**网页搜索（豆包搜索）**卡片（见[下文](#设置界面卡片)）、在 `$DSH_HOME/.credentials.yaml` 中添加 `DOUBAO_SEARCH_API_KEY` 条目，或通过启动环境变量提供。
 
 2. **安装插件：**
@@ -121,6 +123,8 @@ DOUBAO_SEARCH_API_KEY ─────▶│      web-search-doubao       │
 3. **搜索。** 问 harness 一件时效性强的事，观察 `web_search` 工具返回豆包搜索结果。
 
 ## 设置界面卡片
+
+![网页搜索（豆包搜索）设置卡片 —— harness 设置界面实况](docs/img/settings-card.png)
 
 安装后，harness 设置侧边栏会新增**网页搜索（豆包搜索）**分区，包含三个字段——API Key（掩码输入，附可点击的**获取 API Key ↗**链接直达[豆包搜索 API Key 页面](https://console.volcengine.com/search-infinity/api-key)）、接口地址、服务版本。**保存**会把它们写入 DSH 凭据服务（引用名分别为 `DOUBAO_SEARCH_API_KEY`、`DOUBAO_SEARCH_BASE_URL`、`DOUBAO_SEARCH_EDITION`）；**清空**会移除全部三个。API Key 旁的徽标在存入密钥后变为*已配置*，密钥变化时实时刷新。保存的值在下一次搜索即生效——无需重启。
 
