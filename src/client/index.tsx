@@ -39,12 +39,20 @@ const en: Record<string, string> = {
   getApiKey: 'Get an API key ↗',
   keyConfigured: 'configured',
   keyMissing: 'not configured',
+  keyUnknown: 'status unknown',
+  keyCheckFailed: 'status check failed',
+  apiUnavailable: 'Credentials API unavailable',
+  apiUnavailableHint: 'This host does not expose the credentials API (api.credentials) to plugins,'
+    + ' so the key cannot be saved or detected from this card. Configure it from a file instead:'
+    + ' write the key to refs.DOUBAO_SEARCH_API_KEY in ~/.dsh/.credentials.yaml,'
+    + ' or set web-search-doubao.apiKey in settings.yaml.',
   save: 'Save',
   saving: 'Saving…',
   reset: 'Reset',
   saved: 'Saved.',
   saveFailed: 'Save failed.',
   resetDone: 'Cleared.',
+  resetUnavailable: 'Cannot clear.',
   storageNote: 'Where things live: values saved here go to the DSH credentials service'
     + ' (~/.dsh/.credentials.yaml) — never into settings.yaml. The web-search-doubao'
     + ' section in settings.yaml is only for file-based edits of the same fields.',
@@ -63,12 +71,20 @@ const zh: Record<string, string> = {
   getApiKey: '获取 API Key ↗',
   keyConfigured: '已配置',
   keyMissing: '未配置',
+  keyUnknown: '状态未知',
+  keyCheckFailed: '状态检测失败',
+  apiUnavailable: '凭据接口不可用',
+  apiUnavailableHint: '当前宿主未向本插件暴露 credentials 读写接口（api.credentials 不可用），'
+    + '因此无法在界面保存或检测密钥。请改用文件方式配置：将密钥写入'
+    + ' ~/.dsh/.credentials.yaml 的 refs.DOUBAO_SEARCH_API_KEY，'
+    + '或在 settings.yaml 的 web-search-doubao.apiKey 直接填写。',
   save: '保存',
   saving: '保存中…',
   reset: '清空',
   saved: '已保存。',
   saveFailed: '保存失败。',
   resetDone: '已清空。',
+  resetUnavailable: '无法清空。',
   storageNote: '存储说明：此处保存的取值写入 DSH 凭据服务（~/.dsh/.credentials.yaml）——'
     + '不会写入 settings.yaml。settings.yaml 中的 web-search-doubao 分区仅用于以文件方式编辑同一批字段。',
 }

@@ -15,7 +15,7 @@ interface RegisteredSlot {
 }
 
 /** A client context capturing every service interaction, with a scriptable credentials API. */
-function fakeContext(options: { configuredRefs?: Set<string>, failSet?: boolean } = {}) {
+function fakeContext(options: { configuredRefs?: Set<string>, failSet?: boolean, noCredentialsApi?: boolean, failDescribe?: boolean } = {}) {
   const sections: RegisteredSlot[] = []
   const items: RegisteredSlot[] = []
   const locales: Array<[string, unknown]> = []
@@ -27,36 +27,39 @@ function fakeContext(options: { configuredRefs?: Set<string>, failSet?: boolean 
 
   const ctx: ClientContext = {
     get: (service) => service === 'connection'
-      ? {
-          api: {
-            credentials: {
-              set: async ({ ref, value }) => {
-                setCalls.push({ ref, value })
-                return options.failSet === true
-                  ? { result: { ok: false, error: { message: 'denied' } } }
-                  : { result: { ok: true } }
-              },
-              unset: async ({ ref }) => {
-                unsetCalls.push(ref)
-                return { result: { ok: true } }
-              },
-              describe: async ({ refs }) => {
-                describeCalls.push([...refs])
-                return {
-                  result: {
-                    ok: true,
-                    value: {
-                      credentials: Object.fromEntries(refs.map((ref) => [
-                        ref,
-                        { configured: configuredRefs.has(ref), writable: true },
-                      ])),
+      ? options.noCredentialsApi === true
+        ? undefined
+        : {
+            api: {
+              credentials: {
+                set: async ({ ref, value }) => {
+                  setCalls.push({ ref, value })
+                  return options.failSet === true
+                    ? { result: { ok: false, error: { message: 'denied' } } }
+                    : { result: { ok: true } }
+                },
+                unset: async ({ ref }) => {
+                  unsetCalls.push(ref)
+                  return { result: { ok: true } }
+                },
+                describe: async ({ refs }) => {
+                  describeCalls.push([...refs])
+                  if (options.failDescribe === true) throw new Error('describe boom')
+                  return {
+                    result: {
+                      ok: true,
+                      value: {
+                        credentials: Object.fromEntries(refs.map((ref) => [
+                          ref,
+                          { configured: configuredRefs.has(ref), writable: true },
+                        ])),
+                      },
                     },
-                  },
-                }
+                  }
+                },
               },
             },
-          },
-        }
+          }
       : undefined,
     locale: {
       bind: () => (key: string) => `t:${key}`,
@@ -238,6 +241,64 @@ describe('web-search-doubao client card live refresh', () => {
     c.remoteHandlers[0]!('OTHER_REF')
     await tick()
     expect(c.describeCalls.length).toBe(before)
+  })
+})
+
+describe('web-search-doubao client card without credentials API', () => {
+  it('reports the API as unavailable instead of pretending "not configured"', async () => {
+    const c = fakeContext({ noCredentialsApi: true })
+    apply(c.ctx)
+    await tick()
+    const props = itemProps(c.items[0]!)
+    const state = props.hooks.searchProviderCard.getSnapshot()
+    expect(state.apiState).toBe('unavailable')
+    expect(state.keyConfigured).toBe(false)
+    expect(state.writable).toBe(false)
+    expect(c.describeCalls).toHaveLength(0)
+  })
+
+  it('does not silently no-op on save when the API is missing; it shows the guide', async () => {
+    const c = fakeContext({ noCredentialsApi: true })
+    apply(c.ctx)
+    await tick()
+    const props = itemProps(c.items[0]!)
+    await props.save({ apiKey: 'key-1' })
+    const state = props.hooks.searchProviderCard.getSnapshot()
+    expect(state.message).toBe('apiUnavailable')
+    expect(state.messageDetail).toBeTruthy()
+    expect(c.setCalls).toHaveLength(0)
+  })
+
+  it('does not silently no-op on reset when the API is missing', async () => {
+    const c = fakeContext({ noCredentialsApi: true })
+    apply(c.ctx)
+    await tick()
+    const props = itemProps(c.items[0]!)
+    await props.reset()
+    const state = props.hooks.searchProviderCard.getSnapshot()
+    expect(state.message).toBe('resetUnavailable')
+    expect(c.unsetCalls).toHaveLength(0)
+  })
+
+  it('surfaces a describe transport failure as an error state', async () => {
+    const c = fakeContext({ failDescribe: true })
+    apply(c.ctx)
+    await tick()
+    const props = itemProps(c.items[0]!)
+    const state = props.hooks.searchProviderCard.getSnapshot()
+    expect(state.apiState).toBe('error')
+    expect(state.apiError).toBe('describe boom')
+  })
+
+  it('shows the failing set message on a rejected set', async () => {
+    const c = fakeContext({ failSet: true })
+    apply(c.ctx)
+    await tick()
+    const props = itemProps(c.items[0]!)
+    await props.save({ apiKey: 'key-1' })
+    const state = props.hooks.searchProviderCard.getSnapshot()
+    expect(state.message).toBe('saveFailed')
+    expect(state.messageDetail).toBe('denied')
   })
 })
 

@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react'
-import type { ReactElement, ReactNode } from 'react'
+import type { CSSProperties, ReactElement, ReactNode } from 'react'
 
 /** One configurable field of the card. */
 export interface CardFieldSpec {
@@ -54,12 +54,21 @@ export interface SearchProviderCardConfig {
   dictionaries: { en: Record<string, string>, zh: Record<string, string> }
 }
 
+/** The credentials API's availability, probed on apply. */
+export type CardApiState = 'unknown' | 'ok' | 'unavailable' | 'error'
+
 /** Reactive card state exposed to the form through the injected hook. */
 export interface CardState {
   saving: boolean
-  message: 'saved' | 'saveFailed' | 'resetDone' | undefined
+  message: 'saved' | 'saveFailed' | 'resetDone' | 'apiUnavailable' | 'resetUnavailable' | undefined
+  /** Optional detail for the current message (e.g. the failing API error). */
+  messageDetail: string | undefined
   keyConfigured: boolean
   writable: boolean
+  /** Whether the host exposes the credentials API this card writes through. */
+  apiState: CardApiState
+  /** The describe()/set() error, when apiState is `error`. */
+  apiError: string | undefined
 }
 
 /** The store contract the slot runtime turns into a `useSearchProviderCard` hook. */
@@ -77,6 +86,7 @@ interface CredentialsWriteResponse {
 interface CredentialsDescribeResponse {
   result?: {
     ok?: boolean
+    error?: { message?: string }
     value?: { credentials?: Record<string, { configured?: boolean, writable?: boolean }> }
   }
 }
@@ -153,6 +163,13 @@ const badgeMissingStyle = {
   color: 'var(--dsw-alias-fg-tertiary, #98a2b3)',
   background: 'var(--dsw-alias-bg-secondary, rgba(152, 162, 179, 0.16))',
 } as const
+const badgeWarnStyle = {
+  padding: '1px 8px',
+  borderRadius: '9999px',
+  fontSize: 'var(--dsw-font-size-xs, 12px)',
+  color: 'var(--dsw-alias-fg-warning, #b54708)',
+  background: 'var(--dsw-alias-bg-warning-muted, rgba(247, 144, 9, 0.14))',
+} as const
 const actionsStyle = { display: 'flex', alignItems: 'center', gap: 'var(--dsw-spacing-2, 8px)' } as const
 const primaryButtonStyle = {
   padding: 'var(--dsw-spacing-1, 4px) var(--dsw-spacing-3, 12px)',
@@ -171,7 +188,31 @@ const secondaryButtonStyle = {
   cursor: 'pointer',
 } as const
 const messageStyle = { color: 'var(--dsw-alias-fg-secondary, #667085)', fontSize: 'var(--dsw-font-size-xs, 12px)' } as const
+const detailStyle = { color: 'var(--dsw-alias-fg-error, #d92d20)', fontSize: 'var(--dsw-font-size-xs, 12px)' } as const
+const warningBannerStyle = {
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: 'var(--dsw-spacing-1, 4px)',
+  padding: 'var(--dsw-spacing-2, 8px) var(--dsw-spacing-3, 12px)',
+  borderRadius: 'var(--dsw-radius-md, 6px)',
+  border: '1px solid var(--dsw-alias-border-warning, #f79009)',
+  background: 'var(--dsw-alias-bg-warning-muted, rgba(247, 144, 9, 0.10))',
+  color: 'var(--dsw-alias-fg-warning, #b54708)',
+  fontSize: 'var(--dsw-font-size-xs, 12px)',
+} as const
 /* jscpd:ignore-end */
+
+/** Resolve the badge label for the key field from the current state. */
+function badgeKey(state: CardState, configured: boolean): string {
+  if (state.apiState === 'unavailable' || state.apiState === 'error') return 'keyUnknown'
+  return configured ? 'keyConfigured' : 'keyMissing'
+}
+
+/** Resolve the badge style for the key field from the current state. */
+function badgeStyle(state: CardState, configured: boolean): CSSProperties {
+  if (state.apiState !== 'ok') return badgeWarnStyle
+  return configured ? badgeConfiguredStyle : badgeMissingStyle
+}
 
 /**
  * The card's form. Registered as the section's single child item; receives the
@@ -182,17 +223,30 @@ function CardForm(props: CardFormProps): ReactElement {
   const state = props.useSearchProviderCard((s) => s)
   const [values, setValues] = useState<Record<string, string>>({})
   const setValue = (id: string, value: string) => setValues((prev) => ({ ...prev, [id]: value }))
+  const apiDown = state.apiState === 'unavailable' || state.apiState === 'error'
   return (
     <div style={columnStyle}>
       <p style={descriptionStyle}>{props.t('description')}</p>
+      {apiDown
+        ? (
+            <div style={warningBannerStyle}>
+              <strong>{props.t('apiUnavailable')}</strong>
+              <span>
+                {state.apiState === 'error' && state.apiError !== undefined
+                  ? `${props.t('keyCheckFailed')}: ${state.apiError}`
+                  : props.t('apiUnavailableHint')}
+              </span>
+            </div>
+          )
+        : null}
       {props.fields.map((field) => (
         <div key={field.id} style={fieldStyle}>
           <div style={labelRowStyle}>
             <span style={labelStyle}>{props.t(field.id)}</span>
             {field.id === props.keyFieldId
               ? (
-                  <span style={state.keyConfigured ? badgeConfiguredStyle : badgeMissingStyle}>
-                    {props.t(state.keyConfigured ? 'keyConfigured' : 'keyMissing')}
+                  <span style={badgeStyle(state, state.keyConfigured)}>
+                    {props.t(badgeKey(state, state.keyConfigured))}
                   </span>
                 )
               : null}
@@ -233,7 +287,7 @@ function CardForm(props: CardFormProps): ReactElement {
         <button
           type="button"
           style={primaryButtonStyle}
-          disabled={state.saving || !state.writable}
+          disabled={state.saving || (state.apiState === 'ok' && !state.writable)}
           onClick={() => { void props.save(values) }}
         >
           {props.t(state.saving ? 'saving' : 'save')}
@@ -241,13 +295,14 @@ function CardForm(props: CardFormProps): ReactElement {
         <button
           type="button"
           style={secondaryButtonStyle}
-          disabled={state.saving || !state.writable}
+          disabled={state.saving || (state.apiState === 'ok' && !state.writable)}
           onClick={() => { void props.reset() }}
         >
           {props.t('reset')}
         </button>
         {state.message !== undefined ? <span style={messageStyle}>{props.t(state.message)}</span> : null}
       </div>
+      {state.messageDetail !== undefined ? <span style={detailStyle}>{state.messageDetail}</span> : null}
       <p style={hintStyle}>{props.t('storageNote')}</p>
     </div>
   )
@@ -273,7 +328,15 @@ export function createSearchProviderCard(config: SearchProviderCardConfig): {
     const api = ctx.get('connection')?.api
     const t = ctx.locale.bind(localeNs)
 
-    let snapshot: CardState = { saving: false, message: undefined, keyConfigured: false, writable: true }
+    let snapshot: CardState = {
+      saving: false,
+      message: undefined,
+      messageDetail: undefined,
+      keyConfigured: false,
+      writable: true,
+      apiState: 'unknown',
+      apiError: undefined,
+    }
     const listeners = new Set<() => void>()
     const store: CardStore = {
       getSnapshot: () => snapshot,
@@ -291,36 +354,58 @@ export function createSearchProviderCard(config: SearchProviderCardConfig): {
     const refreshCredential = async () => {
       if (keyRef === '') return
       if (api?.credentials?.describe === undefined) {
-        setSnapshot({ keyConfigured: false, writable: false })
+        // The host does not expose the credentials API: be explicit instead of
+        // silently showing "not configured" (which is misleading when a key
+        // IS configured from a file).
+        setSnapshot({ apiState: 'unavailable', apiError: undefined, keyConfigured: false, writable: false })
         return
       }
+      setSnapshot({ apiState: 'unknown' })
       try {
         const response = await api.credentials.describe({ refs: [keyRef] })
         if (response.result?.ok === true) {
           const view = response.result.value?.credentials?.[keyRef]
-          setSnapshot({ keyConfigured: view?.configured === true, writable: view?.writable !== false })
+          setSnapshot({
+            apiState: 'ok',
+            apiError: undefined,
+            keyConfigured: view?.configured === true,
+            writable: view?.writable !== false,
+          })
         } else {
-          setSnapshot({ keyConfigured: false, writable: false })
+          setSnapshot({
+            apiState: 'error',
+            apiError: response.result?.error?.message ?? 'describe failed',
+            keyConfigured: false,
+            writable: false,
+          })
         }
-      } catch {
-        // Transient transport failure: keep the previous badge state.
+      } catch (error) {
+        // Transient transport failure: surface it, but keep the previous badge state.
+        setSnapshot({
+          apiState: 'error',
+          apiError: error instanceof Error ? error.message : String(error),
+        })
       }
     }
 
     let messageTimer: ReturnType<typeof setTimeout> | undefined
     /** Show a transient status message; the persistent badge stays the source of truth. */
-    const flash = (message: CardState['message']) => {
-      setSnapshot({ saving: false, message })
+    const flash = (message: CardState['message'], detail?: string) => {
+      setSnapshot({ saving: false, message, messageDetail: detail })
       if (messageTimer !== undefined) clearTimeout(messageTimer)
       if (message !== undefined) {
-        messageTimer = setTimeout(() => setSnapshot({ message: undefined }), 4000)
+        messageTimer = setTimeout(() => setSnapshot({ message: undefined, messageDetail: undefined }), 4000)
       }
     }
 
     /** Store every non-blank staged value under its credential reference. */
     const save = async (values: Record<string, string>) => {
-      if (api?.credentials?.set === undefined) return
-      setSnapshot({ saving: true })
+      if (api?.credentials?.set === undefined) {
+        // No silent no-op: tell the user why the button did nothing and where to configure.
+        flash('apiUnavailable', t('apiUnavailableHint'))
+        return
+      }
+      setSnapshot({ saving: true, message: undefined, messageDetail: undefined })
       try {
         for (const field of config.fields) {
           const value = values[field.id]?.trim() ?? ''
@@ -331,16 +416,19 @@ export function createSearchProviderCard(config: SearchProviderCardConfig): {
           }
         }
         flash('saved')
-      } catch {
-        flash('saveFailed')
+      } catch (error) {
+        flash('saveFailed', error instanceof Error ? error.message : undefined)
       }
       await refreshCredential()
     }
 
     /** Remove every credential reference this card writes. */
     const reset = async () => {
-      if (api?.credentials?.unset === undefined) return
-      setSnapshot({ saving: true })
+      if (api?.credentials?.unset === undefined) {
+        flash('resetUnavailable', t('apiUnavailableHint'))
+        return
+      }
+      setSnapshot({ saving: true, message: undefined, messageDetail: undefined })
       for (const field of config.fields) {
         try {
           await api.credentials.unset({ ref: field.refName })

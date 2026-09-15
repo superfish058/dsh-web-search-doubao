@@ -1,7 +1,7 @@
 {
   "name": "dsh-web-search-doubao",
   "description": "Doubao Search (Volcengine 豆包搜索) web search provider for the DeepSeek Harness — dedicated settings GUI card, key stored via the credentials service, billed separately from any model spend",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publishConfig": {
     "access": "public"
   },

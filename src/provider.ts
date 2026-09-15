@@ -34,7 +34,7 @@ export const DOUBAO_DEFAULT_BASE_URL = 'https://open.feedcoopapi.com'
 export const DOUBAO_DEFAULT_EDITION: DoubaoEdition = 'custom'
 
 /** Attribution header sent on every request. Bump with the package version. */
-export const USER_AGENT = 'dsh-web-search-doubao/0.2.1'
+export const USER_AGENT = 'dsh-web-search-doubao/0.2.2'
 
 /**
  * Per-operation option overrides merged over the resolved snapshot — the values
